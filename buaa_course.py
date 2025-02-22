@@ -7,15 +7,13 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
-# 选课系统学号和密码
 student_id = "ididid"
 student_password = "password"
 
-# 要选的课的信息
-select_course_category = 3
-select_course_name = "D421051004-集成电路装备开发技术（01）"
+select_course_category = 5
+select_course_name = "D421061001-微纳米工艺与实践（02）"
+select_course_id = "D421061001"
 
-# 配置Chrome选项
 def setup_driver():
     # 配置Chrome选项
     chrome_options = Options()
@@ -49,26 +47,31 @@ try:
     while True:
         # 进入选课首页，点击我的选课按钮
         browser.get("https://yjsxk.buaa.edu.cn/yjsxkapp/sys/xsxkappbuaa/index.html")
-        time.sleep(0.2)
+        time.sleep(0.5)
         browser.find_element(by=By.XPATH, value='/html/body/div[1]/article[1]/section/div[5]/div[2]/div[4]/a').click()
         time.sleep(0.2)
 
         # 课程类别选择，改<li>标签的索引以选择不同的课程类别
         browser.find_element(by=By.XPATH, value=f'/html/body/div[1]/article[2]/div[2]/div/ul/li[{select_course_category}]').click()
 
+        # 输入课程号并搜索
+        course_id = browser.find_element(By.XPATH, f"/html/body/div[1]/article[2]/div[2]/div/div/div[{select_course_category}]/form/input[1]")
+        course_id.send_keys(select_course_id)
+        browser.find_element(by=By.XPATH, value=f'/html/body/div[1]/article[2]/div[2]/div/div/div[{select_course_category}]/form/input[2]').click()
+        
 
         # 等待课程信息表格加载
         table = WebDriverWait(browser, 10).until(
             EC.presence_of_element_located((By.XPATH, f"/html/body/div[1]/article[2]/div[2]/div/div/div[{select_course_category}]/div/table/tbody"))
         )
         time.sleep(0.2)
-        # 获取所有行
+        
+
         rows = table.find_elements(By.TAG_NAME, "tr")
 
         for row in rows:
             # 获取单元格
             cells = row.find_elements(By.TAG_NAME, "td")
-
             
             if len(cells) >= 3:  # 确保行有足够的单元格
                 # 获取课程
@@ -101,5 +104,8 @@ try:
                     print(f"已选课：{course_name}")
                     browser.quit()
                     exit(0)
+            else:
+                print("未找到课程信息")
+                exit(1)
 except BaseException as e:
     print(e)
